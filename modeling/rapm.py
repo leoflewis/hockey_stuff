@@ -1,10 +1,14 @@
 import requests, pandas as pd, numpy as npm, sys
+from sklearn.linear_model import Ridge
 
+# Corsi shot types. For those unfamiliar, corsi is a funny name for any shot, even ones that miss and get blocked.
 MISSED_SHOT = 'MISSED_SHOT'
 SHOT = 'SHOT'
 GOAL = 'GOAL'
 BLOCK = 'BLOCK'
 
+
+# For each game
 game = 2022021018
 
 plays_data = requests.get('http://statsapi.web.nhl.com/api/v1/game/{}/feed/live'.format(game)).json()
@@ -16,27 +20,31 @@ all_plays = plays_data['liveData']['plays']['allPlays']
 plays = [x for x in all_plays if x['result']['eventTypeId'] == MISSED_SHOT or x['result']['eventTypeId'] == SHOT or x['result']['eventTypeId'] == GOAL or x['result']['eventTypeId'] == BLOCK]
 count_plays = 0
 
-print(len(shifts['data']) * len(plays))
+# New data frame and iterator for each game 
+single_game_corsi_for_shifts = pd.DataFrame(columns=('cf/60', 'duration', 'player'))
+i = 0
 
-#For each shift
+# For each shift
 for shift in shifts['data']:
+    i += 1
     shift_player = shift['lastName']
     shift_period = shift['period']
     shift_start = float(shift['startTime'].replace(":", "."))
     shift_end = float(shift['endTime'].replace(":", "."))
-    shift_duration = shift['duration']
+    
     shift_team = shift['teamAbbrev']
 
     shots_for = 0
     shots_against = 0
     # (ignoring shootouts)
-    if shift_period < 5:
+    if shift_period < 5 and shift_team == 'MIN':
 
+        shift_duration = float(shift['duration'].replace(":", "."))
+        
         #...look for a play...
         for x in range(len(plays) -1):
             count_plays += 1
             play = plays[x]
-            #print(count_plays)
             play_period = play['about']['period']
             play_time = float(play['about']['periodTime'].replace(":", "."))
             play_team = None
@@ -48,15 +56,16 @@ for shift in shifts['data']:
 
                 play_type = play['result']['eventTypeId']
             
-                #If the play type of corsi...
+                #If the play type was of type corsi...
                 if play_type == MISSED_SHOT or play_type == SHOT or play_time == GOAL:
+
                     #...mark it as for or against... 
                     if shift_team == play_team:
                         shots_for += 1
                     else:
                         shots_against += 1
 
-                #If the play type of corsi...
+                #If the play type of was of type block...
                 elif play_type == BLOCK:
                     #...mark it as for or against...
                     if shift_team == play_team:
@@ -64,11 +73,24 @@ for shift in shifts['data']:
                     else:
                         shots_for += 1
         
-        print(shift_player + " on ice for " + str(shots_for) + " in " + shift_duration + " time on ice.")
-            
+        # Append row to game data frame 
+        cf_per_60 = (shots_for/shift_duration) * 60
+        name = shift['firstName'] + shift['lastName']
+        single_game_corsi_for_shifts.loc[i] = [cf_per_60, shift_duration, name]
+
+# Append game dataframe to totals data frame
 
             
-    
+
+
+
+y = single_game_corsi_for_shifts['cf/60']
+x = pd.get_dummies(single_game_corsi_for_shifts[['duration', 'player']])
+print(y)
+print(x)
+rdg = Ridge(alpha = 0)
+rdg.fit(x, y)
+print(rdg.score(x,y))
         
 
     
