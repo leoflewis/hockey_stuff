@@ -28,6 +28,9 @@ for date in games['dates']:
     shifts = requests.get('https://api.nhle.com/stats/rest/en/shiftcharts?cayenneExp=gameId={}'.format(game)).json()
 
     all_plays = plays_data['liveData']['plays']['allPlays']
+    shifts = shifts['data']
+    # Make a list of non goalie shifts
+    shifts = [j for j in shifts if j['playerId'] != 8470594 or j['playerId'] != 8479406]
 
     # Make a list of only shot plays
     plays = [x for x in all_plays if x['result']['eventTypeId'] == MISSED_SHOT or x['result']['eventTypeId'] == SHOT or x['result']['eventTypeId'] == GOAL or x['result']['eventTypeId'] == BLOCK]
@@ -38,7 +41,7 @@ for date in games['dates']:
     i = 0
 
     # For each shift
-    for shift in shifts['data']:
+    for shift in shifts:
         i += 1
         shift_player_id = shift['playerId']
         shift_player = shift['lastName']
@@ -47,11 +50,10 @@ for date in games['dates']:
         shift_end = float(shift['endTime'].replace(":", "."))
         shift_code = shift['typeCode']
         shift_team = shift['teamAbbrev']
-
         shots_for = 0
         shots_against = 0
         # (ignoring shootouts)
-        if shift_period < 5 and shift_team == 'MIN' and shift_code != 505 and (shift_player_id != 8470594 or shift_player_id != 8479406):
+        if shift_period < 5 and shift_team == 'MIN' and shift_code != 505 and shift_player_id != 8470594 and shift_player_id != 8479406:
             try:
                 shift_duration = float(shift['duration'].replace(":", "."))
             except:
@@ -92,6 +94,7 @@ for date in games['dates']:
             # Append row to game data frame 
             cf_per_60 = ((shots_for - shots_against) / shift_duration) * 60
             name = shift['firstName'] + shift['lastName']
+            
             single_game_corsi_for_shifts.loc[i] = [cf_per_60, shift_duration, name]
 
     # Append game dataframe to totals data frame
