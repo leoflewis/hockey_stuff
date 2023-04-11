@@ -27,18 +27,20 @@ for date in games['dates']:
     plays_data = requests.get('http://statsapi.web.nhl.com/api/v1/game/{}/feed/live'.format(game)).json()
     shifts = requests.get('https://api.nhle.com/stats/rest/en/shiftcharts?cayenneExp=gameId={}'.format(game)).json()
 
-    all_plays = plays_data['liveData']['plays']['allPlays']
+    plays = plays_data['liveData']['plays']['allPlays']
     shifts = shifts['data']
-    # Make a list of non goalie shifts
-    shifts = [j for j in shifts if j['playerId'] != 8470594 or j['playerId'] != 8479406]
 
-    # Make a list of only shot plays
-    plays = [x for x in all_plays if x['result']['eventTypeId'] == MISSED_SHOT or x['result']['eventTypeId'] == SHOT or x['result']['eventTypeId'] == GOAL or x['result']['eventTypeId'] == BLOCK]
+   
     count_plays = 0
 
     # New data frame and iterator for each game 
     single_game_corsi_for_shifts = pd.DataFrame(columns=('cf/60', 'duration', 'player'))
     i = 0
+
+    penalty = False
+    penalty_release = None
+    penalty_release_period = None
+    penalty_team = None
 
     # For each shift
     for shift in shifts:
@@ -66,30 +68,59 @@ for date in games['dates']:
                 play_period = play['about']['period']
                 play_time = float(play['about']['periodTime'].replace(":", "."))
                 play_team = None
-                play_team = play['team']['triCode']
+                play_type = play['result']['eventTypeId']
+                try:
+                    play_team = play['team']['triCode']
+                except:
+                    play_team = None
 
 
-                #...that happened during the shift.
-                if play_period == shift_period and play_time >= shift_start and play_time <= shift_end:
+                #released by clock
+                if (penalty and play_time <= penalty_release and play_period == penalty_release_period):
+                    penalty = False
+    
+                #released by goal
+                if play_type == GOAL and play_team != penalty_team and penalty and play_period == penalty_release_period:
+                    penalty = False
+                    if play_team == 'MIN':
+                        shots_for -= 1
+                    else:
+                        shots_against -= 1
 
-                    play_type = play['result']['eventTypeId']
-                
-                    #If the play type was of type corsi...
-                    if play_type == MISSED_SHOT or play_type == SHOT or play_time == GOAL:
 
-                        #...mark it as for or against... 
-                        if shift_team == play_team:
-                            shots_for += 1
-                        else:
-                            shots_against += 1
+                if play_type == "PENALTY":
+                    penalty_time = play['result']['penaltyMinutes']
+                    if play_time - penalty_time >= 0:
+                        penalty_release = play_time - penalty_time
+                        penalty_release_period = play_period
+                    else:
+                        penalty_release = (play_time - penalty_time) + 20
+                        penalty_release_period = play_period + 1
+                    penalty = True
+                    penalty_team = play['team']['triCode']
 
-                    #If the play type of was of type block...
-                    elif play_type == BLOCK:
-                        #...mark it as for or against...
-                        if shift_team == play_team:
-                            shots_against += 1
-                        else:
-                            shots_for += 1
+                if not penalty:
+                    #...that happened during the shift.
+                    if play_period == shift_period and play_time >= shift_start and play_time <= shift_end:
+
+                        play_type = play['result']['eventTypeId']
+                    
+                        #If the play type was of type corsi...
+                        if play_type == MISSED_SHOT or play_type == SHOT or play_time == GOAL:
+
+                            #...mark it as for or against... 
+                            if shift_team == play_team:
+                                shots_for += 1
+                            else:
+                                shots_against += 1
+
+                        #If the play type of was of type block...
+                        elif play_type == BLOCK:
+                            #...mark it as for or against...
+                            if shift_team == play_team:
+                                shots_against += 1
+                            else:
+                                shots_for += 1
             
             # Append row to game data frame 
             cf_per_60 = ((shots_for - shots_against) / shift_duration) * 60
