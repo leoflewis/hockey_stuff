@@ -49,7 +49,7 @@ for x in range(len(all_plays) -1):
     #released by goal
     if play_type == GOAL and play_team != penalty_team and penalty and play_period == penalty_release_period:
         penalty = False
-        print("released at " + str(play_time) + " in " + str(play_period))
+        print("released at " + str(play_time) + " in " + str(play_period) + " by goal")
         if home_team == play_team:
             home_shots_for -= 1
         if away_team == play_team:
