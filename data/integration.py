@@ -168,17 +168,19 @@ def game_data(game_id, db):
             prev_period = period
             prev_play = play['result']['event']
             prev_time = time
+            eventTeam = play['team']['id']
             xG = float(xG)
             print(EventID)
-            vals = (EventID, EventName, Game, Season, PeriodTime, PeriodTimeRemaining, Period, x, y, xG, Player1, Player2, Player3, goalie, type)
-            sql = "INSERT INTO GameEvent(EventId, EventName, Game, Season, PeriodTime, PeriodTimeRemaining, Period, X, Y, xG, Player1, Player2, Player3, Goalie, ShotType) VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
-
-            # try:
-            #     cursor.execute(sql, vals)
-            #     db.commit()
-            #     print(sql)
-            # except mysql.connector.errors.IntegrityError:
-            #     print("Id already exists")
+            # vals = (EventID, EventName, Game, Season, PeriodTime, PeriodTimeRemaining, Period, x, y, xG, Player1, Player2, Player3, goalie, type)
+            # sql = "INSERT INTO GameEvent(EventId, EventName, Game, Season, PeriodTime, PeriodTimeRemaining, Period, X, Y, xG, Player1, Player2, Player3, Goalie, ShotType) VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
+            vals = (eventTeam, EventID)
+            sql = "UPDATE GameEvent SET EventTeam = %s WHERE EventID = %s"
+            try:
+                cursor.execute(sql, vals)
+                db.commit()
+                print(sql)
+            except mysql.connector.errors.IntegrityError:
+                print("Id already exists")
 
     homegoals = data['liveData']['boxscore']['teams']['home']['teamStats']['teamSkaterStats']['goals']
     awaygoals = data['liveData']['boxscore']['teams']['away']['teamStats']['teamSkaterStats']['goals']
@@ -193,18 +195,18 @@ def game_data(game_id, db):
         home_win = 1
     
     new_date = date.split("T")
-    print(new_date[0])
+    # print(new_date[0])
     #vals = (gameId, seasonId, homeId, awayId, new_date[0], homegoals, awaygoals, home_xG, away_xG, homeshots, awayshots, gametype)
     #sql = "INSERT INTO Game(GameId, Season, HomeTeam, AwayTeam, GameDate, HomeScore, AwayScore, HomeXG, AwayXG, HomeShots, AwayShots, GameType) VALUES(%s, %s, %s, %s, STR_TO_DATE(%s, '%Y-%m-%d'), %s, %s, %s, %s, %s, %s, %s)"
-    vals = (home_win, game_id)
-    sql = "UPDATE Game SET HomeWin = %s WHERE GameId = %s"
-    print("Game {} homewin {}".format(game_id, home_win))
-    try:
-        cursor.execute(sql, vals)
-        db.commit()
-        print(sql)
-    except mysql.connector.errors.IntegrityError:
-        print("Id already exists")
+    # vals = (home_win, game_id)
+    # sql = "UPDATE Game SET HomeWin = %s WHERE GameId = %s"
+    # print("Game {} homewin {}".format(game_id, home_win))
+    # try:
+    #     cursor.execute(sql, vals)
+    #     db.commit()
+    #     print(sql)
+    # except mysql.connector.errors.IntegrityError:
+    #     print("Id already exists")
 
     
 
