@@ -57,7 +57,20 @@ for date in games['dates']:
         # (ignoring shootouts)
         if shift_period < 5 and shift_team == 'MIN' and shift_code != 505 and shift_player_id != 8470594 and shift_player_id != 8479406:
             try:
-                shift_duration = float(shift['duration'].replace(":", "."))
+                raw_shift_time = shift['duration'].split(':')
+                mins = 0
+                print(raw_shift_time)
+                if raw_shift_time[0] == '00':
+                    mins = 0
+                else:
+                    if raw_shift_time[0][0] == '0':
+                        mins = (float(raw_shift_time[0][1]) * 60)
+                    else:
+                        #someone had a long shift
+                        mins = float(raw_shift_time[0])
+                seconds = float(raw_shift_time[1])
+                shift_duration = float(mins + seconds)
+                print(shift_duration)
             except:
                 print("error")
             
@@ -123,7 +136,7 @@ for date in games['dates']:
                                 shots_for += 1
             
             # Append row to game data frame 
-            cf_per_60 = ((shots_for - shots_against) / shift_duration) * 60
+            cf_per_60 = (((shots_for - shots_against) / shift_duration) * 60) * 60
             name = shift['firstName'] + shift['lastName']
             
             single_game_corsi_for_shifts.loc[i] = [cf_per_60, shift_duration, name]
