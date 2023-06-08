@@ -27,3 +27,5 @@ coef_table = pd.DataFrame(list(x.columns)).copy()
 coef_table.insert(len(coef_table.columns),"Coefs",rdg.coef_.transpose())
 
 print(coef_table.sort_values(by=['Coefs']))
+
+print(pw['Player'].loc[pw['Player'] == 'Amanda Kessel'])
