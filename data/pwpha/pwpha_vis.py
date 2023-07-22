@@ -11,5 +11,3 @@ print(shots)
 for col in pbp:
     print(col)
     print(pbp[col].unique())
-xl = pd.ExcelFile('23_SUMMARY_WHKYHAC_SPORTLOGIQ.xlsx')
-sheet1 = pd.read_excel(xl, 'SkatersPW')
