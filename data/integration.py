@@ -118,67 +118,69 @@ def game_data(game_id, db):
 
             period = play['about']['period']
             time = int(play['about']['periodTime'].replace(':', ''))
-            if play['result']['event'] == 'Goal' or play['result']['event'] == 'Shot' or play['result']['event'] == 'Missed Shot':
-                if x < 0:
-                    if not (x * - 1) > 90:
-                        x = x * -1
-                        if y < 0:
-                            y = y * -1
-                new_angles = get_angles(x, y)
-                new_distance = numpy.sqrt((y - 0)**2 + (x - 89.0)**2)
-                try:
-                    #try to get shot type. missed shots do not have a type but can still have xG
-                    type = play['result']['secondaryType']
-                    if type == 'Wrist Shot':
-                        new_shot = [[x, y, 0, 0, 0, 0, 0, 0, 0, 1, new_angles[0], new_angles[1], new_distance]]
-                    elif type == 'Backhand':
-                        new_shot = [[x, y, 0, 1, 0, 0, 0, 0, 0, 0, new_angles[0], new_angles[1], new_distance]]
-                    elif type == 'Deflected':
-                        new_shot = [[x, y, 0, 0, 1, 0, 0, 0, 0, 0, new_angles[0], new_angles[1], new_distance]]
-                    elif type == 'Slap Shot':
-                        new_shot = [[x, y, 0, 0, 0, 1, 0, 0, 0, 0, new_angles[0], new_angles[1], new_distance]]
-                    elif type == 'Snap Shot':
-                        new_shot = [[x, y, 0, 0, 0, 0, 1, 0, 0, 0, new_angles[0], new_angles[1], new_distance]]
-                    elif type == 'Tip-In':
-                        new_shot = [[x, y, 0, 1, 0, 0, 0, 1, 0, 0, new_angles[0], new_angles[1], new_distance]]
-                    elif type == 'Wrap-around':
-                        new_shot = [[x, y, 0, 0, 0, 0, 0, 0, 1, 0, new_angles[0], new_angles[1], new_distance]]
-                    else:
-                        new_shot = [[x, y, 1, 0, 0, 0, 0, 0, 0, 0, new_angles[0], new_angles[1], new_distance]]
-                except:
-                    # in the event of no shot type given
-                    new_shot = [[x, y, 1, 0, 0, 0, 0, 0, 0, 0, new_angles[0], new_angles[1], new_distance]]                  
-                if period == prev_period and prev_ev_team == play['team']['id'] and prev_play in ['Goal', 'Shot', 'Misses Shot'] and time - prev_time > 300:
-                    new_shot[0].insert(2, 1)
-                else:
-                    new_shot[0].insert(2, 0)
-                new_shot[0].insert(3, 0)
-                new_df = pandas.DataFrame(new_shot, columns=predictors)
-                pred = model.predict_proba(new_df)
-                pred = round(pred[0][1], 4)
+            # if play['result']['event'] == 'Goal' or play['result']['event'] == 'Shot' or play['result']['event'] == 'Missed Shot':
+            #     if x < 0:
+            #         if not (x * - 1) > 90:
+            #             x = x * -1
+            #             if y < 0:
+            #                 y = y * -1
+            #     new_angles = get_angles(x, y)
+            #     new_distance = numpy.sqrt((y - 0)**2 + (x - 89.0)**2)
+            #     try:
+            #         #try to get shot type. missed shots do not have a type but can still have xG
+            #         type = play['result']['secondaryType']
+            #         if type == 'Wrist Shot':
+            #             new_shot = [[x, y, 0, 0, 0, 0, 0, 0, 0, 1, new_angles[0], new_angles[1], new_distance]]
+            #         elif type == 'Backhand':
+            #             new_shot = [[x, y, 0, 1, 0, 0, 0, 0, 0, 0, new_angles[0], new_angles[1], new_distance]]
+            #         elif type == 'Deflected':
+            #             new_shot = [[x, y, 0, 0, 1, 0, 0, 0, 0, 0, new_angles[0], new_angles[1], new_distance]]
+            #         elif type == 'Slap Shot':
+            #             new_shot = [[x, y, 0, 0, 0, 1, 0, 0, 0, 0, new_angles[0], new_angles[1], new_distance]]
+            #         elif type == 'Snap Shot':
+            #             new_shot = [[x, y, 0, 0, 0, 0, 1, 0, 0, 0, new_angles[0], new_angles[1], new_distance]]
+            #         elif type == 'Tip-In':
+            #             new_shot = [[x, y, 0, 1, 0, 0, 0, 1, 0, 0, new_angles[0], new_angles[1], new_distance]]
+            #         elif type == 'Wrap-around':
+            #             new_shot = [[x, y, 0, 0, 0, 0, 0, 0, 1, 0, new_angles[0], new_angles[1], new_distance]]
+            #         else:
+            #             new_shot = [[x, y, 1, 0, 0, 0, 0, 0, 0, 0, new_angles[0], new_angles[1], new_distance]]
+            #     except:
+            #         # in the event of no shot type given
+            #         new_shot = [[x, y, 1, 0, 0, 0, 0, 0, 0, 0, new_angles[0], new_angles[1], new_distance]]                  
+            #     if period == prev_period and prev_ev_team == play['team']['id'] and prev_play in ['Goal', 'Shot', 'Misses Shot'] and time - prev_time > 300:
+            #         new_shot[0].insert(2, 1)
+            #     else:
+            #         new_shot[0].insert(2, 0)
+            #     new_shot[0].insert(3, 0)
+            #     new_df = pandas.DataFrame(new_shot, columns=predictors)
+            #     pred = model.predict_proba(new_df)
+            #     pred = round(pred[0][1], 4)
                 
-                if play['team']['triCode'] == home:
-                    home_xG += pred
-                if play['team']['triCode'] == away:
-                    away_xG += pred
+            #     if play['team']['triCode'] == home:
+            #         home_xG += pred
+            #     if play['team']['triCode'] == away:
+            #         away_xG += pred
 
-                xG = pred
+            #     xG = pred
                 
-                prev_ev_team = play['team']['id']
+            #     prev_ev_team = play['team']['id']
+            
             prev_period = period
             prev_play = play['result']['event']
             prev_time = time
             eventTeam = play['team']['id']
-            xG = float(xG)
+            #xG = float(xG)
             print(EventID)
-            # vals = (EventID, EventName, Game, Season, PeriodTime, PeriodTimeRemaining, Period, x, y, xG, Player1, Player2, Player3, goalie, type)
-            # sql = "INSERT INTO GameEvent(EventId, EventName, Game, Season, PeriodTime, PeriodTimeRemaining, Period, X, Y, xG, Player1, Player2, Player3, Goalie, ShotType) VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
-            vals = (eventTeam, EventID)
-            sql = "UPDATE GameEvent SET EventTeam = %s WHERE EventID = %s"
+            #vals = (EventID, EventName, Game, Season, PeriodTime, PeriodTimeRemaining, Period, x, y, xG, Player1, Player2, Player3, goalie, type)
+            #sql = "INSERT INTO GameEvent(EventId, EventName, Game, Season, PeriodTime, PeriodTimeRemaining, Period, X, Y, xG, Player1, Player2, Player3, Goalie, ShotType) VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
+            
+            vals = (x, y, EventID)
+            sql = "UPDATE GameEvent SET x = %s, y = %s  WHERE EventID = %s"
             try:
                 cursor.execute(sql, vals)
                 db.commit()
-                print(sql)
+                print(sql.format(vals))
             except mysql.connector.errors.IntegrityError:
                 print("Id already exists")
 
@@ -220,10 +222,10 @@ def whole_season():
 
     try:
         db = mysql.connector.connect(
-            host="localhost",
-            user=os.environ.get("sql-user"),
-            database=os.environ.get("sql-db"),
-            password=os.environ.get("sql-password"),
+            host=os.environ.get("AZURE_MYSQL_HOST"),
+            user=os.environ.get("AZURE_MYSQL_USER"),
+            database=os.environ.get("AZURE_MYSQL_NAME"),
+            password=os.environ.get("AZURE_MYSQL_PASSWORD"),
             port=3306
         )
     except Error as e:

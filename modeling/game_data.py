@@ -21,20 +21,29 @@ if db.is_connected():
         cursor.execute(get_games)
         games = cursor.fetchall()
         for game in games:
-            home_homexG_query = "SELECT sum(HomeXG) FROM Game WHERE HomeTeam = {} AND GameDate < '{}';".format(game[7], game[2])
-            cursor.execute(home_homexG_query)
-            home_homexG = cursor.fetchall()
-            print(home_homexG[0][0])
-            
-            #home_awayxG_query = "SELECT sum(xg) FROM GameEvent WHERE AwayTeam = {} AND GameDate < {}".format(game[7], game[2])
-            #away_awayxG_query = "SELECT sum(xg) FROM GameEvent WHERE AwayTeam = {} AND GameDate < {}".format(game[8], game[2])
-            #away_homexG_query = "SELECT sum(xg) FROM GameEvent WHERE HomeTeam = {} AND GameDate < {}".format(game[8], game[2])
-            print(home_homexG_query)
-            #print(home_awayxG_query)
-            #print(away_awayxG_query)
-            #print(away_homexG_query)
-            home_homexG = cursor.fetchall()
-            print(home_homexG[0][0])
+            print()
+            print(game[2])
+            print("*** NEW GAME ***")
+
+            home_awayxG_query = "SELECT sum(xG) FROM GameEvent e JOIN Game on e.Game = Game.GameId WHERE EventTeam = {} AND GameDate < '{}';".format(game[7], game[2])
+            cursor.execute(home_awayxG_query)
+            home_xGf = cursor.fetchall()
+            print("Home team to date xGF: " + str(home_xGf[0][0]))
+
+            away_homexG_query = "SELECT sum(xG) FROM GameEvent e JOIN Game on e.Game = Game.GameId WHERE EventTeam = {} AND GameDate < '{}';".format(game[8], game[2])
+            cursor.execute(away_homexG_query)
+            away_xGf = cursor.fetchall()
+            print("Away team to date xGF: " + str(away_xGf[0][0]))
+
+            home_awayxG_query = "SELECT sum(xG) FROM GameEvent e JOIN Game on e.Game = Game.GameId WHERE ConcededTeam = {} AND GameDate < '{}';".format(game[7], game[2])
+            cursor.execute(home_awayxG_query)
+            home_xGa = cursor.fetchall()
+            print("Home team to date xGA: " + str(home_xGa[0][0]))
+
+            away_homexG_query = "SELECT sum(xG) FROM GameEvent e JOIN Game on e.Game = Game.GameId WHERE ConcededTeam = {} AND GameDate < '{}';".format(game[8], game[2])
+            cursor.execute(away_homexG_query)
+            away_xGa = cursor.fetchall()
+            print("Away team to date xGA: " + str(away_xGa[0][0]))
             
 
 
